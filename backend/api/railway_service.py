@@ -323,8 +323,11 @@ def _extract_seat_rows(payload):
 def filter_routes_with_available_seats(routes: list, date: str, quota: str = 'GN'):
     """Annotate routes with seat checks and keep only routes with live seat availability."""
     filtered_routes = []
+    provider_errors = 0
+    routes_checked = 0
 
     for route in routes:
+        routes_checked += 1
         route_checks = []
         all_available = True
 
@@ -345,8 +348,12 @@ def filter_routes_with_available_seats(routes: list, date: str, quota: str = 'GN
                 'seats': seat_result.get('seats', []),
                 'provider': seat_result.get('provider', 'unknown'),
                 'raw_status': seat_result.get('seats', [{}])[0].get('status') if seat_result.get('seats') else seat_result.get('status'),
+                'error': seat_result.get('error'),
                 'date': seat_result.get('date', date),
             })
+
+            if seat_result.get('provider') == 'error' or seat_result.get('error'):
+                provider_errors += 1
 
             if not seat_result.get('available'):
                 all_available = False
@@ -358,7 +365,16 @@ def filter_routes_with_available_seats(routes: list, date: str, quota: str = 'GN
             annotated_route['seat_checks'] = route_checks
             filtered_routes.append(annotated_route)
 
-    return filtered_routes
+    reason = None
+    if not filtered_routes:
+        reason = 'seat_api_unavailable' if provider_errors else 'no_live_seats_found'
+
+    return {
+        'routes': filtered_routes,
+        'routes_checked': routes_checked,
+        'provider_errors': provider_errors,
+        'reason': reason,
+    }
 
 
 # ─── Mock Data Helpers ──────────────────────────────────────────────────────────

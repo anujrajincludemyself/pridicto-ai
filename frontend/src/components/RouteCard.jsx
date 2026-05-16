@@ -11,10 +11,12 @@ function formatSeatLabel(status) {
   return String(status).replace(/_/g, ' ')
 }
 
-function SeatAvailability({ route, searchDate, isBest }) {
+function SeatAvailability({ route, searchDate, isBest, seatFilterReason, seatFilterFallback }) {
   const [open, setOpen] = useState(isBest)
   const checks = route.seat_checks || []
   const allAvailable = route.seat_available ?? checks.every(check => check.available)
+  const providerUnavailable = seatFilterReason === 'seat_api_unavailable' || seatFilterFallback
+  const trainName = route.legs?.[0]?.train_name || 'Train'
 
   return (
     <div className="seat-box">
@@ -27,23 +29,31 @@ function SeatAvailability({ route, searchDate, isBest }) {
         <div className="seat-box-body">
           <div className="seat-summary-row">
             <div>
-              <strong>{route.legs?.[0]?.train_no || 'Train'} {route.legs?.[0]?.train_name ? `• ${route.legs[0].train_name}` : ''}</strong>
-              <span>Live seats confirmed for {searchDate || route.seat_checks?.[0]?.date || 'this date'}</span>
+              <strong>{route.legs?.[0]?.train_no || 'Train'} {route.legs?.[0]?.train_name ? `• ${trainName}` : ''}</strong>
+              <span>
+                {providerUnavailable
+                  ? `Seat API unavailable for ${searchDate || 'this date'}; showing the route and waiting for a live seat response.`
+                  : `Live seats confirmed for ${searchDate || route.seat_checks?.[0]?.date || 'this date'}`}
+              </span>
             </div>
-            <div className={`seat-status-pill ${allAvailable ? 'available' : 'unavailable'}`}>
-              {allAvailable ? 'Seats available' : 'No seats'}
+            <div className={`seat-status-pill ${providerUnavailable ? 'unavailable' : (allAvailable ? 'available' : 'unavailable')}`}>
+              {providerUnavailable ? 'Seat API unavailable' : (allAvailable ? 'Seats available' : 'No seats')}
             </div>
           </div>
 
-          <div className="seat-grid">
-            {checks.map((check, index) => (
-              <div key={index} className="seat-chip">
-                <strong>{check.from_code} → {check.to_code}</strong>
-                <span>{check.class_code} • {check.date}</span>
-                <span>{formatSeatLabel(check.raw_status || (check.available ? 'AVAILABLE' : 'NOT AVAILABLE'))}</span>
-              </div>
-            ))}
-          </div>
+          {providerUnavailable ? (
+            <div className="seat-chip muted">The live seat provider is blocked for this key, so the app is showing the route without seat verification.</div>
+          ) : (
+            <div className="seat-grid">
+              {checks.map((check, index) => (
+                <div key={index} className="seat-chip">
+                  <strong>{check.from_code} → {check.to_code}</strong>
+                  <span>{check.class_code} • {check.date}</span>
+                  <span>{formatSeatLabel(check.raw_status || (check.available ? 'AVAILABLE' : 'NOT AVAILABLE'))}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -70,7 +80,7 @@ function LegBar({ leg }) {
   )
 }
 
-export default function RouteCard({ route, index, searchDate }) {
+export default function RouteCard({ route, index, searchDate, seatFilterReason, seatFilterFallback }) {
   const isBest = index === 0
   const isDirect = route.num_changes === 0
 
@@ -122,7 +132,13 @@ export default function RouteCard({ route, index, searchDate }) {
         <div className="stat-item">🚂 <strong>{route.trains.join(', ')}</strong></div>
       </div>
 
-      <SeatAvailability route={route} searchDate={searchDate} isBest={isBest} />
+      <SeatAvailability
+        route={route}
+        searchDate={searchDate}
+        isBest={isBest}
+        seatFilterReason={seatFilterReason}
+        seatFilterFallback={seatFilterFallback}
+      />
     </div>
   )
 }

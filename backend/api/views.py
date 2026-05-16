@@ -77,7 +77,11 @@ def search_routes(request):
             max_results=8,
         )
 
-        routes = filter_routes_with_available_seats(routes, date)
+        seat_filter = filter_routes_with_available_seats(routes, date)
+        if seat_filter['reason'] == 'seat_api_unavailable':
+            seat_filter['fallback_to_routes'] = True
+        else:
+            routes = seat_filter['routes']
 
         return Response({
             'success': True,
@@ -88,6 +92,9 @@ def search_routes(request):
             'routes': routes,
             'data_source': 'api' if hasattr(train_schedules, '__len__') and len(train_schedules) > 0 else 'mock',
             'seat_filter_applied': True,
+            'seat_filter_reason': seat_filter['reason'],
+            'routes_checked_for_seats': seat_filter['routes_checked'],
+            'seat_filter_fallback_to_routes': seat_filter.get('fallback_to_routes', False),
         })
 
     except Exception as e:
@@ -140,7 +147,11 @@ def ai_search(request):
         # Find routes
         routes = find_routes(all_trains, origin=from_code, destination=to_code, max_hops=2)
 
-        routes = filter_routes_with_available_seats(routes, date)
+        seat_filter = filter_routes_with_available_seats(routes, date)
+        if seat_filter['reason'] == 'seat_api_unavailable':
+            seat_filter['fallback_to_routes'] = True
+        else:
+            routes = seat_filter['routes']
 
         # Format with AI
         ai_summary = format_routes_with_ai(routes, query)
@@ -153,6 +164,9 @@ def ai_search(request):
             'routes': routes,
             'routes_count': len(routes),
             'seat_filter_applied': True,
+            'seat_filter_reason': seat_filter['reason'],
+            'routes_checked_for_seats': seat_filter['routes_checked'],
+            'seat_filter_fallback_to_routes': seat_filter.get('fallback_to_routes', False),
         })
 
     except Exception as e:
