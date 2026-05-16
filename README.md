@@ -45,9 +45,9 @@ API → **http://localhost:8000/api/**
 | `SUPABASE_URL` + keys | https://supabase.com → New project → Settings → API |
 | `UPSTASH_REDIS_REST_URL` + token | https://upstash.com → Create Redis DB → REST API |
 | `RAPIDAPI_KEY` | https://rapidapi.com → Search "Indian Railway IRCTC" → Subscribe free |
-| `ANTHROPIC_API_KEY` | https://console.anthropic.com → API Keys |
+| `GROQ_API_KEY` | https://console.groq.com → API Keys |
 
-**Best AI Model:** `claude-3-haiku-20240307` — fast, cheap, accurate for intent parsing.
+**Best AI Model:** `llama3-70b-8192` — fast, cheap, accurate for intent parsing.
 
 > **Without API keys the app still works** using built-in mock train data!
 

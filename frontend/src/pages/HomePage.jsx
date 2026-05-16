@@ -5,12 +5,12 @@ import { ArrowRight, Zap, GitBranch, Clock } from 'lucide-react'
 import { getPopularRoutes } from '../services/api'
 
 const FEATURES = [
-  { icon: '🧠', title: 'AI-Powered Search', desc: 'Type naturally — "trains from Kota to Patna avoiding long waits" — Claude understands you.' },
-  { icon: '🗺️', title: 'Smart Route Graph', desc: 'BFS graph engine finds optimal multi-hop connections other apps miss entirely.' },
-  { icon: '⚡', title: 'Redis-Cached Speed', desc: 'Schedules cached 6 hours. Zero wait on repeat searches. Blazing fast always.' },
-  { icon: '🔴', title: 'Live Train Status', desc: 'Real-time running status for any train in India, right inside the app.' },
-  { icon: '🔗', title: 'Connection Validation', desc: 'Minimum 30-min buffer enforced. No impossible connections ever suggested.' },
-  { icon: '₹0', title: 'Completely Free', desc: 'Built on Vercel, Railway.app, Supabase and Upstash — zero monthly cost.' },
+  { icon: '🧠', title: 'Plain-language search', desc: 'Write the trip like you’d ask a clerk at the station counter.' },
+  { icon: '🗺️', title: 'Practical route plan', desc: 'Shows routes that make sense for real travel, not just algorithm demos.' },
+  { icon: '⚡', title: 'Fast lookups', desc: 'Repeat searches stay quick with caching and simple data loading.' },
+  { icon: '🔴', title: 'Live status', desc: 'Check running trains and seat info without leaving the page.' },
+  { icon: '🔗', title: 'Change protection', desc: 'Stops unrealistic transfer plans that are too tight to catch.' },
+  { icon: '₹0', title: 'Local first', desc: 'Runs locally with free tiers and works even when API keys are missing.' },
 ]
 
 export default function HomePage() {
@@ -33,15 +33,14 @@ export default function HomePage() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="hero-badge">
             <span className="badge-dot" />
-            Powered by Claude AI + BFS Graph Engine
+            Railway journey planner
           </div>
           <h1 className="hero-title">
-            Find the <span className="gradient-text">Smartest</span><br />
-            Train Route in India
+            Plan your next <span className="gradient-text">train trip</span><br />
+            with clarity
           </h1>
           <p className="hero-subtitle">
-            Pridicto uses a graph algorithm + AI to discover optimal multi-hop train journeys.
-            Search naturally, get ranked results instantly.
+            A calmer, station-style planner for finding routes, checking trains, and seeing seat info in one place.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button className="search-btn" style={{ fontSize: '1rem', padding: '0.8rem 2rem' }} onClick={() => navigate('/search')}>
@@ -57,14 +56,31 @@ export default function HomePage() {
             </button>
           </div>
         </motion.div>
+
+        <div className="hero-rail-scene" aria-hidden="true">
+          <div className="hero-train">
+            <div className="train-engine">
+              <div className="train-window-row" />
+            </div>
+            <div className="train-cab" />
+            <div className="train-cab" style={{ opacity: 0.92, transform: 'scaleX(0.95)' }} />
+            <div className="train-smoke">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className="hero-rail-track" />
+          <div className="hero-rail-ties" />
+        </div>
       </section>
 
       {/* Features */}
       <section className="features-section">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <p className="section-label">Why Pridicto</p>
-          <h2 className="section-title">Built different, by design</h2>
-          <p className="section-sub">Not just a schedule lookup — a route intelligence engine that thinks in graphs and speaks human.</p>
+          <h2 className="section-title">Built like a station board</h2>
+          <p className="section-sub">Clear, readable, and focused on the details people actually look for before boarding.</p>
         </motion.div>
         <div className="features-grid">
           {FEATURES.map((f, i) => (

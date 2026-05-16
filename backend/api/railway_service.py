@@ -143,6 +143,123 @@ def get_live_train_status(train_no: str, date: str):
         return {"error": str(e)}
 
 
+def get_seat_availability(train_no: str, from_code: str, to_code: str, date: str, quota: str = 'GN', class_code: str = 'SL'):
+    """Get seat availability for a train."""
+    if not settings.INDIAN_RAIL_API_KEY:
+        return {
+            "available": False,
+            "provider": "mock",
+            "message": "INDIAN_RAIL_API_KEY not configured",
+            "train_no": train_no,
+            "from": from_code,
+            "to": to_code,
+            "date": date,
+            "quota": quota,
+            "class_code": class_code,
+            "seats": [],
+        }
+
+    cache_key = f"seat:{train_no}:{from_code}:{to_code}:{date}:{quota}:{class_code}"
+    cached = get_cached(cache_key)
+    if cached:
+        return cached
+
+    try:
+        url = (
+            f"https://indianrailapi.com/api/v2/SeatAvailability/apikey/{settings.INDIAN_RAIL_API_KEY}"
+            f"/TrainNumber/{train_no}/From/{from_code}/To/{to_code}/Date/{date}/Quota/{quota}/Class/{class_code}"
+        )
+        resp = requests.get(url, timeout=12)
+        resp.raise_for_status()
+        data = resp.json()
+
+        result = _normalize_seat_availability_response(data, train_no, from_code, to_code, date, quota, class_code)
+        set_cached(cache_key, result, ttl_seconds=15 * 60)
+        return result
+    except Exception as e:
+        logger.error(f"Seat availability error: {e}")
+        return {
+            "available": False,
+            "provider": "error",
+            "error": str(e),
+            "train_no": train_no,
+            "from": from_code,
+            "to": to_code,
+            "date": date,
+            "quota": quota,
+            "class_code": class_code,
+            "seats": [],
+        }
+
+
+def _normalize_seat_availability_response(data, train_no, from_code, to_code, date, quota, class_code):
+    """Normalize different provider response shapes into one structure."""
+    candidates = []
+    if isinstance(data, dict):
+        for key in ('data', 'result', 'availability', 'train'):
+            value = data.get(key)
+            if isinstance(value, list):
+                candidates = value
+                break
+            if isinstance(value, dict):
+                candidates = [value]
+                break
+        if not candidates:
+            candidates = [data]
+
+    seats = []
+    for item in candidates:
+        if not isinstance(item, dict):
+            continue
+        seats.extend(_extract_seat_rows(item))
+
+    if not seats and isinstance(data, dict):
+        seats.extend(_extract_seat_rows(data))
+
+    return {
+        "available": bool(seats),
+        "provider": "indianrailapi",
+        "train_no": train_no,
+        "from": from_code,
+        "to": to_code,
+        "date": date,
+        "quota": quota,
+        "class_code": class_code,
+        "seats": seats,
+        "raw": data,
+    }
+
+
+def _extract_seat_rows(payload):
+    rows = []
+    for key in ('availability', 'classes', 'seats', 'results', 'items'):
+        value = payload.get(key)
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    rows.append({
+                        'status': item.get('status', item.get('seat_status', item.get('availability_status', 'unknown'))),
+                        'date': item.get('date', item.get('journey_date', '')),
+                        'class_code': item.get('class', item.get('classCode', item.get('class_code', ''))),
+                        'quota': item.get('quota', item.get('quotaCode', item.get('quota_code', ''))),
+                        'available_seats': item.get('available_seats', item.get('seats_available', item.get('available', ''))),
+                        'fare': item.get('fare', item.get('price', '')),
+                    })
+            break
+
+    if not rows and any(k in payload for k in ('status', 'available_seats', 'fare')):
+        rows.append({
+            'status': payload.get('status', 'unknown'),
+            'date': payload.get('date', payload.get('journey_date', '')),
+            'class_code': payload.get('class', payload.get('classCode', payload.get('class_code', ''))),
+            'quota': payload.get('quota', payload.get('quotaCode', payload.get('quota_code', ''))),
+            'available_seats': payload.get('available_seats', payload.get('seats_available', payload.get('available', ''))),
+            'fare': payload.get('fare', payload.get('price', '')),
+        })
+
+    return rows
+
+
 # ─── Mock Data Helpers ──────────────────────────────────────────────────────────
 
 POPULAR_STATIONS = {

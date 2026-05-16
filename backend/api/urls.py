@@ -7,5 +7,6 @@ urlpatterns = [
     path('routes/ai-search/', views.ai_search, name='ai_search'),
     path('stations/search/', views.station_search, name='station_search'),
     path('train/status/', views.train_status, name='train_status'),
+    path('train/seat-availability/', views.seat_availability, name='seat_availability'),
     path('routes/popular/', views.popular_routes, name='popular_routes'),
 ]

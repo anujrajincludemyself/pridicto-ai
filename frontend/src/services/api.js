@@ -16,3 +16,15 @@ export const getPopularRoutes = () =>
 
 export const getTrainStatus = (trainNo, date) =>
   api.get('/train/status/', { params: { train_no: trainNo, date } })
+
+export const getSeatAvailability = (trainNo, from, to, date, quota = 'GN', classCode = 'SL') =>
+  api.get('/train/seat-availability/', {
+    params: {
+      train_no: trainNo,
+      from,
+      to,
+      date,
+      quota,
+      class_code: classCode,
+    },
+  })
