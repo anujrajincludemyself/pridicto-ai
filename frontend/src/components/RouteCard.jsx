@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { getSeatAvailability } from '../services/api'
+import { useState } from 'react'
 
 function fmt(min) {
   if (!min) return '--'
@@ -13,55 +12,9 @@ function formatSeatLabel(status) {
 }
 
 function SeatAvailability({ route, searchDate, isBest }) {
-  const firstLeg = route.legs?.[0]
-  const lastLeg = route.legs?.[route.legs.length - 1]
-  const trainNo = firstLeg?.train_no
-  const fromCodeValue = firstLeg?.from_code || firstLeg?.from || ''
-  const toCodeValue = lastLeg?.to_code || lastLeg?.to || ''
-  const classCode = route.legs?.[0]?.classes?.[0] || 'SL'
-
   const [open, setOpen] = useState(isBest)
-  const [loading, setLoading] = useState(false)
-  const [availability, setAvailability] = useState(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (!open || !trainNo || !searchDate || availability) return
-
-    let cancelled = false
-
-    const load = async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const response = await getSeatAvailability(
-          trainNo,
-          fromCodeValue,
-          toCodeValue,
-          searchDate,
-          'GN',
-          classCode
-        )
-        if (!cancelled) {
-          setAvailability(response.data)
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.response?.data?.error || 'Seat availability not available right now.')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [availability, classCode, fromCodeValue, open, route.legs, searchDate, toCodeValue, trainNo])
-
-  if (!trainNo) return null
+  const checks = route.seat_checks || []
+  const allAvailable = route.seat_available ?? checks.every(check => check.available)
 
   return (
     <div className="seat-box">
@@ -72,43 +25,25 @@ function SeatAvailability({ route, searchDate, isBest }) {
 
       {open && (
         <div className="seat-box-body">
-          {loading && <div className="seat-loading">Checking seats for {classCode}...</div>}
-
-          {!loading && error && <div className="seat-error">{error}</div>}
-
-          {!loading && availability && !error && (
-            <>
-              <div className="seat-summary-row">
-                <div>
-                  <strong>{trainNo}</strong>
-                  <span>{route.legs?.[0]?.train_name || 'Train'} • {classCode} • GN</span>
-                </div>
-                <div className={`seat-status-pill ${availability.available ? 'available' : 'unavailable'}`}>
-                  {availability.available ? 'Live seats found' : 'No live seats'}
-                </div>
-              </div>
-
-              <div className="seat-grid">
-                {(availability.seats || []).slice(0, 3).map((seat, index) => (
-                  <div key={index} className="seat-chip">
-                    <strong>{formatSeatLabel(seat.status)}</strong>
-                    <span>{seat.date || searchDate}</span>
-                    <span>{seat.class_code || classCode} • {seat.quota || 'GN'}</span>
-                    {seat.available_seats ? <span>{seat.available_seats}</span> : null}
-                  </div>
-                ))}
-                {(!availability.seats || availability.seats.length === 0) && (
-                  <div className="seat-chip muted">No structured seat rows returned by the provider.</div>
-                )}
-              </div>
-            </>
-          )}
-
-          {!loading && !availability && !error && (
-            <div className="seat-helper">
-              Tap to check live seats for this train on {searchDate || 'your selected date'}.
+          <div className="seat-summary-row">
+            <div>
+              <strong>{route.legs?.[0]?.train_no || 'Train'} {route.legs?.[0]?.train_name ? `• ${route.legs[0].train_name}` : ''}</strong>
+              <span>Live seats confirmed for {searchDate || route.seat_checks?.[0]?.date || 'this date'}</span>
             </div>
-          )}
+            <div className={`seat-status-pill ${allAvailable ? 'available' : 'unavailable'}`}>
+              {allAvailable ? 'Seats available' : 'No seats'}
+            </div>
+          </div>
+
+          <div className="seat-grid">
+            {checks.map((check, index) => (
+              <div key={index} className="seat-chip">
+                <strong>{check.from_code} → {check.to_code}</strong>
+                <span>{check.class_code} • {check.date}</span>
+                <span>{formatSeatLabel(check.raw_status || (check.available ? 'AVAILABLE' : 'NOT AVAILABLE'))}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

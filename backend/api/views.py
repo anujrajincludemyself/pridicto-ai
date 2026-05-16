@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .graph_engine import find_routes, MOCK_TRAINS
-from .railway_service import get_trains_between_stations, get_station_search, get_live_train_status, get_seat_availability
+from .railway_service import get_trains_between_stations, get_station_search, get_live_train_status, filter_routes_with_available_seats, get_seat_availability
 from .ai_service import parse_search_intent, format_routes_with_ai
 
 logger = logging.getLogger(__name__)
@@ -77,6 +77,8 @@ def search_routes(request):
             max_results=8,
         )
 
+        routes = filter_routes_with_available_seats(routes, date)
+
         return Response({
             'success': True,
             'from': from_code,
@@ -85,6 +87,7 @@ def search_routes(request):
             'routes_count': len(routes),
             'routes': routes,
             'data_source': 'api' if hasattr(train_schedules, '__len__') and len(train_schedules) > 0 else 'mock',
+            'seat_filter_applied': True,
         })
 
     except Exception as e:
@@ -137,6 +140,8 @@ def ai_search(request):
         # Find routes
         routes = find_routes(all_trains, origin=from_code, destination=to_code, max_hops=2)
 
+        routes = filter_routes_with_available_seats(routes, date)
+
         # Format with AI
         ai_summary = format_routes_with_ai(routes, query)
 
@@ -147,6 +152,7 @@ def ai_search(request):
             'ai_summary': ai_summary,
             'routes': routes,
             'routes_count': len(routes),
+            'seat_filter_applied': True,
         })
 
     except Exception as e:

@@ -11,6 +11,7 @@ from .cache_service import get_cached, set_cached
 logger = logging.getLogger(__name__)
 
 RAPIDAPI_BASE = "https://indian-railway-irctc.p.rapidapi.com"
+RAPIDAPI_SEAT_BASE = "https://indian-railway-seat-availability.p.rapidapi.com"
 
 
 def _get_headers():
@@ -18,6 +19,33 @@ def _get_headers():
         "X-RapidAPI-Key": settings.RAPIDAPI_KEY,
         "X-RapidAPI-Host": settings.RAPIDAPI_HOST,
     }
+
+
+def _get_seat_headers():
+    return {
+        "X-RapidAPI-Key": settings.RAPIDAPI_KEY,
+        "X-RapidAPI-Host": settings.RAPIDAPI_SEAT_HOST,
+        "Content-Type": "application/json",
+    }
+
+
+def _seat_status_is_available(status_value, available_seats_value=None):
+    status_text = str(status_value or '').upper().strip()
+
+    if available_seats_value not in (None, '', 'NA', 'N/A'):
+        try:
+            if int(str(available_seats_value)) > 0:
+                return True
+        except Exception:
+            pass
+
+    if not status_text:
+        return False
+
+    if 'WL' in status_text or 'WAIT' in status_text or 'RAC' in status_text:
+        return False
+
+    return 'AVAILABLE' in status_text or 'AVL' in status_text
 
 
 def get_trains_between_stations(from_code: str, to_code: str, date: str = None):
@@ -145,11 +173,11 @@ def get_live_train_status(train_no: str, date: str):
 
 def get_seat_availability(train_no: str, from_code: str, to_code: str, date: str, quota: str = 'GN', class_code: str = 'SL'):
     """Get seat availability for a train."""
-    if not settings.INDIAN_RAIL_API_KEY:
+    if not settings.RAPIDAPI_KEY:
         return {
             "available": False,
             "provider": "mock",
-            "message": "INDIAN_RAIL_API_KEY not configured",
+            "message": "RAPIDAPI_KEY not configured",
             "train_no": train_no,
             "from": from_code,
             "to": to_code,
@@ -165,11 +193,22 @@ def get_seat_availability(train_no: str, from_code: str, to_code: str, date: str
         return cached
 
     try:
-        url = (
-            f"https://indianrailapi.com/api/v2/SeatAvailability/apikey/{settings.INDIAN_RAIL_API_KEY}"
-            f"/TrainNumber/{train_no}/From/{from_code}/To/{to_code}/Date/{date}/Quota/{quota}/Class/{class_code}"
-        )
-        resp = requests.get(url, timeout=12)
+        url = f"{RAPIDAPI_SEAT_BASE}/v1/seat-availability"
+        params = {
+            "trainNumber": train_no,
+            "train_no": train_no,
+            "fromStation": from_code,
+            "from": from_code,
+            "toStation": to_code,
+            "to": to_code,
+            "date": date,
+            "journeyDate": date,
+            "quota": quota,
+            "classCode": class_code,
+            "class": class_code,
+        }
+
+        resp = requests.get(url, headers=_get_seat_headers(), params=params, timeout=12)
         resp.raise_for_status()
         data = resp.json()
 
@@ -178,6 +217,21 @@ def get_seat_availability(train_no: str, from_code: str, to_code: str, date: str
         return result
     except Exception as e:
         logger.error(f"Seat availability error: {e}")
+        if settings.INDIAN_RAIL_API_KEY:
+            try:
+                url = (
+                    f"https://indianrailapi.com/api/v2/SeatAvailability/apikey/{settings.INDIAN_RAIL_API_KEY}"
+                    f"/TrainNumber/{train_no}/From/{from_code}/To/{to_code}/Date/{date}/Quota/{quota}/Class/{class_code}"
+                )
+                resp = requests.get(url, timeout=12)
+                resp.raise_for_status()
+                data = resp.json()
+                result = _normalize_seat_availability_response(data, train_no, from_code, to_code, date, quota, class_code)
+                set_cached(cache_key, result, ttl_seconds=15 * 60)
+                return result
+            except Exception as fallback_error:
+                logger.error(f"Seat availability fallback error: {fallback_error}")
+
         return {
             "available": False,
             "provider": "error",
@@ -216,9 +270,11 @@ def _normalize_seat_availability_response(data, train_no, from_code, to_code, da
     if not seats and isinstance(data, dict):
         seats.extend(_extract_seat_rows(data))
 
+    available = any(_seat_status_is_available(seat.get('status'), seat.get('available_seats')) for seat in seats)
+
     return {
-        "available": bool(seats),
-        "provider": "indianrailapi",
+        "available": available,
+        "provider": "rapidapi-seat-availability",
         "train_no": train_no,
         "from": from_code,
         "to": to_code,
@@ -232,7 +288,7 @@ def _normalize_seat_availability_response(data, train_no, from_code, to_code, da
 
 def _extract_seat_rows(payload):
     rows = []
-    for key in ('availability', 'classes', 'seats', 'results', 'items'):
+    for key in ('availability', 'classes', 'seats', 'results', 'items', 'data', 'result'):
         value = payload.get(key)
         if isinstance(value, list):
             for item in value:
@@ -244,6 +300,8 @@ def _extract_seat_rows(payload):
                         'quota': item.get('quota', item.get('quotaCode', item.get('quota_code', ''))),
                         'available_seats': item.get('available_seats', item.get('seats_available', item.get('available', ''))),
                         'fare': item.get('fare', item.get('price', '')),
+                        'source_station': item.get('from', item.get('fromStation', item.get('source_station', ''))),
+                        'destination_station': item.get('to', item.get('toStation', item.get('destination_station', ''))),
                     })
             break
 
@@ -255,9 +313,52 @@ def _extract_seat_rows(payload):
             'quota': payload.get('quota', payload.get('quotaCode', payload.get('quota_code', ''))),
             'available_seats': payload.get('available_seats', payload.get('seats_available', payload.get('available', ''))),
             'fare': payload.get('fare', payload.get('price', '')),
+            'source_station': payload.get('from', payload.get('fromStation', payload.get('source_station', ''))),
+            'destination_station': payload.get('to', payload.get('toStation', payload.get('destination_station', ''))),
         })
 
     return rows
+
+
+def filter_routes_with_available_seats(routes: list, date: str, quota: str = 'GN'):
+    """Annotate routes with seat checks and keep only routes with live seat availability."""
+    filtered_routes = []
+
+    for route in routes:
+        route_checks = []
+        all_available = True
+
+        for leg in route.get('legs', []):
+            train_no = leg.get('train_no', '')
+            from_code = leg.get('from_code') or leg.get('from') or ''
+            to_code = leg.get('to_code') or leg.get('to') or ''
+            classes = leg.get('classes') or ['SL']
+            class_code = classes[0] if isinstance(classes, list) and classes else 'SL'
+
+            seat_result = get_seat_availability(train_no, from_code, to_code, date, quota, class_code)
+            route_checks.append({
+                'train_no': train_no,
+                'from_code': from_code,
+                'to_code': to_code,
+                'class_code': class_code,
+                'available': seat_result.get('available', False),
+                'seats': seat_result.get('seats', []),
+                'provider': seat_result.get('provider', 'unknown'),
+                'raw_status': seat_result.get('seats', [{}])[0].get('status') if seat_result.get('seats') else seat_result.get('status'),
+                'date': seat_result.get('date', date),
+            })
+
+            if not seat_result.get('available'):
+                all_available = False
+                break
+
+        if all_available and route_checks:
+            annotated_route = dict(route)
+            annotated_route['seat_available'] = True
+            annotated_route['seat_checks'] = route_checks
+            filtered_routes.append(annotated_route)
+
+    return filtered_routes
 
 
 # ─── Mock Data Helpers ──────────────────────────────────────────────────────────

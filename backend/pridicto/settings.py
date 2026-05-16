@@ -96,6 +96,7 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 # API Keys
 RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY', '')
 RAPIDAPI_HOST = os.getenv('RAPIDAPI_HOST', 'indian-railway-irctc.p.rapidapi.com')
+RAPIDAPI_SEAT_HOST = os.getenv('RAPIDAPI_SEAT_HOST', 'indian-railway-seat-availability.p.rapidapi.com')
 INDIAN_RAIL_API_KEY = os.getenv('INDIAN_RAIL_API_KEY', '')
 # Groq AI (replaces Anthropic — free LLaMA 3)
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
