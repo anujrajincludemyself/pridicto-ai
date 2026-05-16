@@ -1,0 +1,7 @@
+## Run these ONE BY ONE in your backend terminal (venv is already active)
+
+pip install -r requirements.txt
+
+python manage.py migrate --run-syncdb
+
+python manage.py runserver
