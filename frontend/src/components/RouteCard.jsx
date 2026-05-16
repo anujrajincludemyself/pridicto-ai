@@ -32,7 +32,7 @@ export default function RouteCard({ route, index }) {
     <div className={`route-card${isBest ? ' best' : ''}`}>
       <div className="route-card-header">
         <div className="route-badges">
-          {isBest && <span className="badge badge-best">⭐ Best Match</span>}
+          {isBest && <span className="badge badge-best">⭐ Recommended</span>}
           {isDirect
             ? <span className="badge badge-direct">✓ Direct</span>
             : <span className="badge badge-connect">{route.num_changes} Change{route.num_changes > 1 ? 's' : ''}</span>

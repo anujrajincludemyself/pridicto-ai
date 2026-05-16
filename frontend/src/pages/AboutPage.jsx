@@ -4,11 +4,11 @@ export default function AboutPage() {
       <div className="about-page">
         <h1>About Pridicto</h1>
         <p>
-          Pridicto is an AI-powered Indian Railways route finder that uses a <strong>BFS graph algorithm</strong> 
-          to discover optimal multi-hop train journeys — including connections other apps miss.
+          Pridicto is a train route finder that uses a <strong>BFS graph algorithm</strong> 
+          to discover practical multi-hop journeys — including connections other apps miss.
         </p>
 
-        <h2>🧠 How the Algorithm Works</h2>
+        <h2>🧠 How the planner works</h2>
         <p>
           Stations are <strong>graph nodes</strong>. Trains are <strong>directed edges</strong> with departure/arrival time weights.
           BFS explores all paths from origin to destination up to 2 hops, 
@@ -26,7 +26,7 @@ export default function AboutPage() {
             <tr><td>Database</td><td>Supabase PostgreSQL</td><td>Free 500MB</td></tr>
             <tr><td>Cache</td><td>Upstash Redis (REST)</td><td>Free 10k req/day</td></tr>
             <tr><td>Train Data</td><td>RapidAPI Indian Railways</td><td>Free 100-500/day</td></tr>
-            <tr><td>AI Layer</td><td>Claude 3 Haiku (Anthropic)</td><td>Free credits</td></tr>
+            <tr><td>Trip Helper</td><td>Groq LLaMA 3 or fallback parser</td><td>Free credits</td></tr>
           </tbody>
         </table>
 
@@ -43,9 +43,9 @@ export default function AboutPage() {
           <div><span className="env-key">UPSTASH_REDIS_REST_TOKEN</span>=<span className="env-val">AXxx...</span></div>
           <div style={{marginTop:'0.5rem'}}><span className="env-comment"># RapidAPI → rapidapi.com → "Indian Railway" → Subscribe free</span></div>
           <div><span className="env-key">RAPIDAPI_KEY</span>=<span className="env-val">your-rapidapi-key</span></div>
-          <div style={{marginTop:'0.5rem'}}><span className="env-comment"># Anthropic → console.anthropic.com → API Keys</span></div>
-          <div><span className="env-key">ANTHROPIC_API_KEY</span>=<span className="env-val">sk-ant-...</span></div>
-          <div><span className="env-key">CLAUDE_MODEL</span>=<span className="env-val">claude-3-haiku-20240307</span></div>
+          <div style={{marginTop:'0.5rem'}}><span className="env-comment"># Groq → console.groq.com → API Keys</span></div>
+          <div><span className="env-key">GROQ_API_KEY</span>=<span className="env-val">gsk_...</span></div>
+          <div><span className="env-key">GROQ_MODEL</span>=<span className="env-val">llama3-70b-8192</span></div>
         </div>
 
         <h2>🚀 Running Locally</h2>
@@ -65,11 +65,10 @@ export default function AboutPage() {
         </div>
         <p>App runs at <strong>http://localhost:3000</strong> — backend at <strong>http://localhost:8000</strong></p>
 
-        <h2>🤖 Best AI Model</h2>
+        <h2>🤖 Smart trip helper</h2>
         <p>
-          Use <strong>claude-3-haiku-20240307</strong> — it's the fastest and cheapest Claude model, 
-          perfect for intent parsing. It handles natural language like "avoid long waits" or 
-          "Chhath Puja special trains" accurately. Falls back to regex if no API key is set.
+          The app uses Groq when configured, and falls back to the built-in parser if no key is set.
+          It handles natural language like "avoid long waits" or "Chhath Puja special trains" and keeps the experience simple.
         </p>
       </div>
     </div>

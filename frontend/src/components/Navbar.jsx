@@ -13,7 +13,7 @@ export default function Navbar() {
         <Link to="/" className={`navbar-link${pathname === '/' ? ' active' : ''}`}>Home</Link>
         <Link to="/search" className={`navbar-link${pathname === '/search' ? ' active' : ''}`}>Search</Link>
         <Link to="/about" className={`navbar-link${pathname === '/about' ? ' active' : ''}`}>About</Link>
-        <Link to="/search" className="navbar-cta">Find Trains →</Link>
+        <Link to="/search" className="navbar-cta">Plan a Trip →</Link>
       </div>
     </nav>
   )

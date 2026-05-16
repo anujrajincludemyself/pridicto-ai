@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .graph_engine import find_routes, MOCK_TRAINS
-from .railway_service import get_trains_between_stations, get_station_search, get_live_train_status
+from .railway_service import get_trains_between_stations, get_station_search, get_live_train_status, get_seat_availability
 from .ai_service import parse_search_intent, format_routes_with_ai
 
 logger = logging.getLogger(__name__)
@@ -188,6 +188,26 @@ def train_status(request):
     
     status_data = get_live_train_status(train_no, date)
     return Response({'train_no': train_no, 'status': status_data})
+
+
+@api_view(['GET'])
+def seat_availability(request):
+    """Get seat availability for a train."""
+    train_no = request.GET.get('train_no', '').strip()
+    from_code = request.GET.get('from', '').upper().strip()
+    to_code = request.GET.get('to', '').upper().strip()
+    date = request.GET.get('date', datetime.now().strftime('%Y%m%d'))
+    quota = request.GET.get('quota', 'GN').upper().strip() or 'GN'
+    class_code = request.GET.get('class_code', request.GET.get('class', 'SL')).upper().strip() or 'SL'
+
+    if not train_no or not from_code or not to_code:
+        return Response(
+            {'error': 'train_no, from, and to are required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    availability = get_seat_availability(train_no, from_code, to_code, date, quota, class_code)
+    return Response(availability)
 
 
 @api_view(['GET'])

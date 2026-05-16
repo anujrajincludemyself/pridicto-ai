@@ -31,6 +31,9 @@ def _get_groq_client():
     except ImportError:
         logger.error("groq package not installed. Run: pip install groq")
         return None
+    except Exception as e:
+        logger.warning(f"Groq client unavailable, using fallback parser: {e}")
+        return None
 
 
 def parse_search_intent(user_query: str) -> dict:
