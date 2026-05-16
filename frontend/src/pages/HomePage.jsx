@@ -5,12 +5,12 @@ import { ArrowRight, Zap, GitBranch, Clock } from 'lucide-react'
 import { getPopularRoutes } from '../services/api'
 
 const FEATURES = [
-  { icon: '🧠', title: 'Natural Search', desc: 'Type how you speak. The app understands station names, timing needs, and trip constraints.' },
-  { icon: '🗺️', title: 'Smart Route Graph', desc: 'A route graph finds practical multi-hop connections other apps often miss.' },
-  { icon: '⚡', title: 'Quick Results', desc: 'Cached schedules keep repeat searches snappy, even on slower connections.' },
-  { icon: '🔴', title: 'Live Train Status', desc: 'Real-time running status for trains across India, right inside the app.' },
-  { icon: '🔗', title: 'Connection Checks', desc: 'Minimum buffer rules help avoid impossible transfers and rushed changes.' },
-  { icon: '₹0', title: 'Free to Use', desc: 'Built on open tooling and free tiers, so anyone can try it locally.' },
+  { icon: '🧠', title: 'Plain-language search', desc: 'Write the trip like you’d ask a clerk at the station counter.' },
+  { icon: '🗺️', title: 'Practical route plan', desc: 'Shows routes that make sense for real travel, not just algorithm demos.' },
+  { icon: '⚡', title: 'Fast lookups', desc: 'Repeat searches stay quick with caching and simple data loading.' },
+  { icon: '🔴', title: 'Live status', desc: 'Check running trains and seat info without leaving the page.' },
+  { icon: '🔗', title: 'Change protection', desc: 'Stops unrealistic transfer plans that are too tight to catch.' },
+  { icon: '₹0', title: 'Local first', desc: 'Runs locally with free tiers and works even when API keys are missing.' },
 ]
 
 export default function HomePage() {
@@ -33,15 +33,14 @@ export default function HomePage() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="hero-badge">
             <span className="badge-dot" />
-            Railway route planner with smart search
+            Railway journey planner
           </div>
           <h1 className="hero-title">
-            Find the <span className="gradient-text">best</span><br />
-            Train Route in India
+            Plan your next <span className="gradient-text">train trip</span><br />
+            with clarity
           </h1>
           <p className="hero-subtitle">
-            Pridicto helps you plan train journeys in plain language and shows the most practical routes first.
-            It feels like asking a helpful station clerk, not filling out a form.
+            A calmer, station-style planner for finding routes, checking trains, and seeing seat info in one place.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button className="search-btn" style={{ fontSize: '1rem', padding: '0.8rem 2rem' }} onClick={() => navigate('/search')}>
@@ -53,7 +52,7 @@ export default function HomePage() {
               onMouseOver={e => e.target.style.borderColor = 'var(--accent)'}
               onMouseOut={e => e.target.style.borderColor = 'var(--border)'}
             >
-              See how it works
+              How it works
             </button>
           </div>
         </motion.div>
@@ -80,8 +79,8 @@ export default function HomePage() {
       <section className="features-section">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <p className="section-label">Why Pridicto</p>
-          <h2 className="section-title">Built for real trips</h2>
-          <p className="section-sub">A clean, practical planner for people who want to get somewhere without wrestling a complicated interface.</p>
+          <h2 className="section-title">Built like a station board</h2>
+          <p className="section-sub">Clear, readable, and focused on the details people actually look for before boarding.</p>
         </motion.div>
         <div className="features-grid">
           {FEATURES.map((f, i) => (

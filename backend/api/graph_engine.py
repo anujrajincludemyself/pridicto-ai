@@ -76,7 +76,10 @@ def build_graph(train_schedules):
                     duration += 24 * 60
 
                 graph[src['station_code']].append({
+                    'from': src['station_code'],
+                    'from_code': src['station_code'],
                     'to': dst['station_code'],
+                    'to_code': dst['station_code'],
                     'to_name': dst.get('station_name', dst['station_code']),
                     'from_name': src.get('station_name', src['station_code']),
                     'train_no': train['train_no'],

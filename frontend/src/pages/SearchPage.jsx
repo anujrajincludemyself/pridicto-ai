@@ -58,6 +58,8 @@ export default function SearchPage() {
     setTo(from)
   }
 
+  const selectedDate = date.replace(/-/g, '')
+
   return (
     <div className="page-wrapper">
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '3rem 1.5rem' }}>
@@ -66,7 +68,7 @@ export default function SearchPage() {
             Search Trains
           </h1>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
-            Find practical routes across India, direct or with connections, without the clutter.
+            Find routes across India, direct or with connections, without the clutter.
           </p>
 
           <div className="search-card">
@@ -75,7 +77,7 @@ export default function SearchPage() {
                 <TrainFront size={16} /> Route Search
               </button>
               <button id="tab-ai" className={`search-tab${tab === 'ai' ? ' active' : ''}`} onClick={() => setTab('ai')}>
-                ✨ Smart Search
+                ✨ Trip Search
               </button>
             </div>
 
@@ -102,7 +104,7 @@ export default function SearchPage() {
             ) : (
               <>
                 <div style={{ marginBottom: '1rem' }}>
-                  <label className="search-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Describe your trip</label>
+                  <label className="search-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Describe your journey</label>
                   <div className="ai-input-wrap">
                     <span className="ai-icon">🚆</span>
                     <input
@@ -116,7 +118,7 @@ export default function SearchPage() {
                   </div>
                 </div>
                 <button id="btn-ai-search" className="search-btn" onClick={handleAiSearch} disabled={loading}>
-                  {loading ? <><span className="spinner" /> Looking up…</> : <><Sparkles size={16} /> Search by trip details</>}
+                  {loading ? <><span className="spinner" /> Looking up…</> : <><Sparkles size={16} /> Search trip details</>}
                 </button>
               </>
             )}
@@ -147,7 +149,7 @@ export default function SearchPage() {
 
               {aiSummary && (
                 <div className="ai-summary-box">
-                  <strong>✨ Route summary: </strong>{aiSummary}
+                  <strong>Trip summary: </strong>{aiSummary}
                 </div>
               )}
 
@@ -160,7 +162,7 @@ export default function SearchPage() {
               ) : (
                 results.map((route, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                    <RouteCard route={route} index={i} />
+                    <RouteCard route={route} index={i} searchDate={selectedDate} />
                   </motion.div>
                 ))
               )}
