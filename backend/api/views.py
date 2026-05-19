@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .graph_engine import find_routes, MOCK_TRAINS
-from .railway_service import get_trains_between_stations, get_station_search, get_live_train_status, get_seat_availability
+from .railway_service import get_trains_between_stations, get_station_search, get_live_train_status, filter_routes_with_available_seats, get_seat_availability
 from .ai_service import parse_search_intent, format_routes_with_ai
 
 logger = logging.getLogger(__name__)
@@ -77,6 +77,12 @@ def search_routes(request):
             max_results=8,
         )
 
+        seat_filter = filter_routes_with_available_seats(routes, date)
+        if seat_filter['reason'] == 'seat_api_unavailable':
+            seat_filter['fallback_to_routes'] = True
+        else:
+            routes = seat_filter['routes']
+
         return Response({
             'success': True,
             'from': from_code,
@@ -85,6 +91,10 @@ def search_routes(request):
             'routes_count': len(routes),
             'routes': routes,
             'data_source': 'api' if hasattr(train_schedules, '__len__') and len(train_schedules) > 0 else 'mock',
+            'seat_filter_applied': True,
+            'seat_filter_reason': seat_filter['reason'],
+            'routes_checked_for_seats': seat_filter['routes_checked'],
+            'seat_filter_fallback_to_routes': seat_filter.get('fallback_to_routes', False),
         })
 
     except Exception as e:
@@ -137,6 +147,12 @@ def ai_search(request):
         # Find routes
         routes = find_routes(all_trains, origin=from_code, destination=to_code, max_hops=2)
 
+        seat_filter = filter_routes_with_available_seats(routes, date)
+        if seat_filter['reason'] == 'seat_api_unavailable':
+            seat_filter['fallback_to_routes'] = True
+        else:
+            routes = seat_filter['routes']
+
         # Format with AI
         ai_summary = format_routes_with_ai(routes, query)
 
@@ -147,6 +163,10 @@ def ai_search(request):
             'ai_summary': ai_summary,
             'routes': routes,
             'routes_count': len(routes),
+            'seat_filter_applied': True,
+            'seat_filter_reason': seat_filter['reason'],
+            'routes_checked_for_seats': seat_filter['routes_checked'],
+            'seat_filter_fallback_to_routes': seat_filter.get('fallback_to_routes', False),
         })
 
     except Exception as e:

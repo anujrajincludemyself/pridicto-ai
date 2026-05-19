@@ -19,6 +19,7 @@ export default function SearchPage() {
   const [results, setResults] = useState(null)
   const [aiSummary, setAiSummary] = useState('')
   const [error, setError] = useState('')
+  const [searchMeta, setSearchMeta] = useState(null)
 
   // Auto-search if URL params set
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function SearchPage() {
       const dateFormatted = date.replace(/-/g, '')
       const res = await searchRoutes(f, t, dateFormatted)
       setResults(res.data.routes || [])
+      setSearchMeta(res.data)
     } catch (e) {
       setError(e.response?.data?.error || 'Search failed. Is the backend running?')
     } finally { setLoading(false) }
@@ -48,6 +50,7 @@ export default function SearchPage() {
       const res = await aiSearch(aiQuery)
       setResults(res.data.routes || [])
       setAiSummary(res.data.ai_summary || '')
+      setSearchMeta(res.data)
     } catch (e) {
       setError(e.response?.data?.error || 'AI search failed.')
     } finally { setLoading(false) }
@@ -157,12 +160,22 @@ export default function SearchPage() {
                 <div className="empty-state">
                   <span className="empty-state-icon">🚂</span>
                   <h3>No routes found</h3>
-                  <p>Try different stations or check whether the backend data source is configured.</p>
+                  <p>
+                    {searchMeta?.seat_filter_reason === 'seat_api_unavailable'
+                      ? 'Live seat API is not accessible for this key right now. Please subscribe to the RapidAPI seat service or use a different key.'
+                      : 'No route with live seat availability was found for this journey and date.'}
+                  </p>
                 </div>
               ) : (
                 results.map((route, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                    <RouteCard route={route} index={i} searchDate={selectedDate} />
+                    <RouteCard
+                      route={route}
+                      index={i}
+                      searchDate={selectedDate}
+                      seatFilterReason={searchMeta?.seat_filter_reason}
+                      seatFilterFallback={searchMeta?.seat_filter_fallback_to_routes}
+                    />
                   </motion.div>
                 ))
               )}

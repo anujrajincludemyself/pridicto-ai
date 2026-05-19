@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -96,10 +96,11 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 # API Keys
 RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY', '')
 RAPIDAPI_HOST = os.getenv('RAPIDAPI_HOST', 'indian-railway-irctc.p.rapidapi.com')
+RAPIDAPI_SEAT_HOST = os.getenv('RAPIDAPI_SEAT_HOST', 'indian-railway-seat-availability.p.rapidapi.com')
 INDIAN_RAIL_API_KEY = os.getenv('INDIAN_RAIL_API_KEY', '')
 # Groq AI (replaces Anthropic — free LLaMA 3)
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
-GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama3-70b-8192')
+GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.1-8b-instant')
 UPSTASH_REDIS_REST_URL = os.getenv('UPSTASH_REDIS_REST_URL', '')
 UPSTASH_REDIS_REST_TOKEN = os.getenv('UPSTASH_REDIS_REST_TOKEN', '')
 SUPABASE_URL = os.getenv('SUPABASE_URL', '')
