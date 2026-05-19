@@ -96,7 +96,7 @@ def build_graph(train_schedules):
     return graph
 
 
-def is_connection_valid(prev_edge, next_edge, min_wait_min=30, max_wait_min=300):
+def is_connection_valid(prev_edge, next_edge, min_wait_min=30, max_wait_min=1440):
     """Check if connection between two train legs is time-feasible."""
     arrival = prev_edge['arrival_min']
     departure = next_edge['departure_min']

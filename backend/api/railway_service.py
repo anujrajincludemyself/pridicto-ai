@@ -175,16 +175,27 @@ def get_seat_availability(train_no: str, from_code: str, to_code: str, date: str
     """Get seat availability for a train."""
     if not settings.RAPIDAPI_KEY:
         return {
-            "available": False,
+            "available": True,
             "provider": "mock",
-            "message": "RAPIDAPI_KEY not configured",
+            "message": "RAPIDAPI_KEY not configured (using mock seats)",
             "train_no": train_no,
             "from": from_code,
             "to": to_code,
             "date": date,
             "quota": quota,
             "class_code": class_code,
-            "seats": [],
+            "seats": [
+                {
+                    "status": "AVAILABLE-0045",
+                    "date": date,
+                    "class_code": class_code,
+                    "quota": quota,
+                    "available_seats": "45",
+                    "fare": "385",
+                    "source_station": from_code,
+                    "destination_station": to_code,
+                }
+            ],
         }
 
     cache_key = f"seat:{train_no}:{from_code}:{to_code}:{date}:{quota}:{class_code}"
@@ -272,9 +283,20 @@ def _normalize_seat_availability_response(data, train_no, from_code, to_code, da
 
     available = any(_seat_status_is_available(seat.get('status'), seat.get('available_seats')) for seat in seats)
 
+    # Check for authorization or subscription error messages
+    error_msg = None
+    if isinstance(data, dict):
+        if 'message' in data and not seats:
+            error_msg = data.get('message')
+        elif 'error' in data:
+            error_msg = data.get('error')
+        elif 'errors' in data:
+            error_msg = str(data.get('errors'))
+
     return {
         "available": available,
-        "provider": "rapidapi-seat-availability",
+        "provider": "error" if error_msg else "rapidapi-seat-availability",
+        "error": error_msg,
         "train_no": train_no,
         "from": from_code,
         "to": to_code,
@@ -321,7 +343,7 @@ def _extract_seat_rows(payload):
 
 
 def filter_routes_with_available_seats(routes: list, date: str, quota: str = 'GN'):
-    """Annotate routes with seat checks and keep only routes with live seat availability."""
+    """Annotate routes with seat checks and keep all routes, showing availability status."""
     filtered_routes = []
     provider_errors = 0
     routes_checked = 0
@@ -357,16 +379,17 @@ def filter_routes_with_available_seats(routes: list, date: str, quota: str = 'GN
 
             if not seat_result.get('available'):
                 all_available = False
-                break
 
-        if all_available and route_checks:
-            annotated_route = dict(route)
-            annotated_route['seat_available'] = True
-            annotated_route['seat_checks'] = route_checks
-            filtered_routes.append(annotated_route)
+        annotated_route = dict(route)
+        annotated_route['seat_available'] = all_available
+        annotated_route['seat_checks'] = route_checks
+        filtered_routes.append(annotated_route)
 
     reason = None
     if not filtered_routes:
+        reason = 'seat_api_unavailable' if provider_errors else 'no_live_seats_found'
+    elif not any(r.get('seat_available') for r in filtered_routes):
+        # If no routes have available seats, set the reason so UI/views know the seat status overview
         reason = 'seat_api_unavailable' if provider_errors else 'no_live_seats_found'
 
     return {
