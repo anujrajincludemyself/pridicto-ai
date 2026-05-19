@@ -5,11 +5,11 @@ import { ArrowRight, Zap, GitBranch, Clock } from 'lucide-react'
 import { getPopularRoutes } from '../services/api'
 
 const FEATURES = [
-  { icon: '🧠', title: 'Plain-language search', desc: 'Write the trip like you’d ask a clerk at the station counter.' },
-  { icon: '🗺️', title: 'Practical route plan', desc: 'Shows routes that make sense for real travel, not just algorithm demos.' },
-  { icon: '⚡', title: 'Fast lookups', desc: 'Repeat searches stay quick with caching and simple data loading.' },
-  { icon: '🔴', title: 'Live status', desc: 'Check running trains and seat info without leaving the page.' },
-  { icon: '🔗', title: 'Change protection', desc: 'Stops unrealistic transfer plans that are too tight to catch.' },
+  { icon: '->', title: 'Plain-language search', desc: 'Write the trip like you’d ask a clerk at the station counter.' },
+  { icon: '->', title: 'Practical route plan', desc: 'Shows routes that make sense for real travel, not just algorithm demos.' },
+  { icon: '->', title: 'Fast lookups', desc: 'Repeat searches stay quick with caching and simple data loading.' },
+  { icon: '->', title: 'Live status', desc: 'Check running trains and seat info without leaving the page.' },
+  { icon: '->', title: 'Change protection', desc: 'Stops unrealistic transfer plans that are too tight to catch.' },
   { icon: '₹0', title: 'Local first', desc: 'Runs locally with free tiers and works even when API keys are missing.' },
 ]
 
