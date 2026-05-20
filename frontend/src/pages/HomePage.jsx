@@ -20,7 +20,7 @@ export default function HomePage() {
   useEffect(() => {
     getPopularRoutes().then(r => setPopular(r.data.popular_routes || [])).catch(() => {})
   }, [])
-
+     
   const go = (from, to) => navigate(`/search?from=${from}&to=${to}`)
 
   return (
@@ -33,7 +33,7 @@ export default function HomePage() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="hero-badge">
             <span className="badge-dot" />
-            Railway journey planner
+            Find Best Trains
           </div>
           <h1 className="hero-title">
             Plan your next <span className="gradient-text">train trip</span><br />
