@@ -93,6 +93,8 @@ export default function HomePage() {
         </div>
       </section>
 
+
+
       {/* Popular Routes */}
       {popular.length > 0 && (
         <section className="popular-section">
@@ -109,5 +111,6 @@ export default function HomePage() {
         </section>
       )}
     </div>
+
   )
 }
